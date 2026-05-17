@@ -1,5 +1,8 @@
 package interfaces;
 
-public class Auditable {
+import java.time.LocalDateTime;
 
+public interface Auditable {
+    LocalDateTime getCreatedTimestamp();
+    LocalDateTime getLastUpdatedTimestamp();
 }

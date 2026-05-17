@@ -1,5 +1,5 @@
 package models.people.employees;
 
-public class Manager {
+public class Manager extends Employee {
 
 }

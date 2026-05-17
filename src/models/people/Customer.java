@@ -1,16 +1,17 @@
 package models.people;
 
+import enums.*;
+import interfaces.Auditable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.io.Serializable;
-
-import enums.*;
 import models.accounts.BankAccount;
+import utils.EncryptionUtils;
+import utils.ValidationUtils;
 
-public abstract class Customer extends Person implements Serializable {
+public abstract class Customer extends Person implements Auditable {
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -24,10 +25,13 @@ public abstract class Customer extends Person implements Serializable {
     private final List<BankAccount> accounts;
 
     public Customer(String name, int age, String email, int phoneNumber, String password) {
-
         super(name, age, email, phoneNumber);
 
-        this.password = password;
+        if (!ValidationUtils.isValidEmail(email)) {
+            throw new IllegalArgumentException("[ERROR] Registration Rejected: Invalid email structural format.");
+        }
+
+        this.password = EncryptionUtils.hashPassword(password);
         this.status = CustomerStatus.ACTIVE;
         this.tier = MembershipTier.REGULAR;
         this.createdAt = LocalDateTime.now();
@@ -35,11 +39,26 @@ public abstract class Customer extends Person implements Serializable {
         this.accounts = new ArrayList<>();
     }
 
+    // audits for customers
+
+    @Override
+    public LocalDateTime getCreatedTimestamp() {
+        return this.createdAt;
+    }
+
+    @Override
+    public LocalDateTime getLastUpdatedTimestamp() {
+        return this.lastLogin;
+    }
+
     // account management methods
 
     public void addAccount(BankAccount account) {
         if (account == null) {
-            throw new IllegalStateException("[ERROR] Account Assignment Denied: Customer profile is permanently closed.");            
+            throw new IllegalArgumentException("[ERROR] Account Assignment Failed: Enter a valid account reference.");
+        }
+        if (this.status == CustomerStatus.CLOSED) {
+            throw new IllegalStateException("[ERROR] Account Assignment Denied: Cannot link accounts to a closed customer profile.");
         }
         this.accounts.add(account);
     }

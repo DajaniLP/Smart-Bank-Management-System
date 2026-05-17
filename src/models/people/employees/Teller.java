@@ -1,5 +1,5 @@
 package models.people.employees;
 
-public class Teller {
+public class Teller extends Employee {
 
 }

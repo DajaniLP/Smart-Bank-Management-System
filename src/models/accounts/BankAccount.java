@@ -1,16 +1,20 @@
 package models.accounts;
 
+import enums.*;
+import exceptions.AccountLockedException;
+import exceptions.InsufficientFundsException;
+import interfaces.Auditable;
+import interfaces.TransactionAction;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.Collections;
-import java.io.Serializable;
 
-import enums.*;
-
-public abstract class BankAccount implements Serializable {
+public abstract class BankAccount implements Serializable, Auditable, TransactionAction {
+    private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
@@ -21,7 +25,6 @@ public abstract class BankAccount implements Serializable {
     
     private final LocalDateTime createdAt;
     private LocalDateTime lastTransactionAt;
-
     private final List<String> transactionHistory;
     
     public BankAccount(String ownerId, double startingBalance) {
@@ -36,6 +39,7 @@ public abstract class BankAccount implements Serializable {
 
     // transaction methods
 
+    @Override
     public void deposit(double amount) {
         validateAccountActive();
         if (amount <= 0) {
@@ -52,13 +56,14 @@ public abstract class BankAccount implements Serializable {
         System.out.println("-------------------------------------------------");        
     }
 
+    @Override
     public void withdraw(double amount) {
         validateAccountActive();
         if (amount <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be positive.");
         }
         if (amount > this.balance) {
-            throw new IllegalStateException("Insufficient funds. Current balance: $" + String.format("%.2f", this.balance));
+            throw new InsufficientFundsException("Insufficient funds. Current balance: $" + String.format("%.2f", this.balance));
         }
         
         this.balance -= amount;
@@ -71,6 +76,7 @@ public abstract class BankAccount implements Serializable {
         System.out.println("-------------------------------------------------");
     }
 
+    @Override
     public void transfer(double amount, BankAccount targetAccount) {
         validateAccountActive();
         if (amount <= 0) {
@@ -78,7 +84,7 @@ public abstract class BankAccount implements Serializable {
         }
         
         if (amount > this.balance) {
-            throw new IllegalStateException("[ERROR] Insufficient funds. Current balance: $" 
+            throw new InsufficientFundsException("[ERROR] Insufficient funds. Current balance: $" 
             + String.format("%.2f", this.balance));
         }
 
@@ -95,6 +101,18 @@ public abstract class BankAccount implements Serializable {
         System.out.println("  Recipient:    " + targetAccount.getId());
         System.out.println("  New Balance:  $" + String.format("%.2f", balance));
         System.out.println("-------------------------------------------------");        
+    }
+
+    // audit methods
+
+    @Override
+    public LocalDateTime getCreatedTimestamp() {
+        return this.createdAt;
+    }
+
+    @Override
+    public LocalDateTime getLastUpdatedTimestamp() {
+        return this.lastTransactionAt;
     }
 
     // account status management methods
@@ -134,12 +152,18 @@ public abstract class BankAccount implements Serializable {
     // helper methods
 
     private void validateAccountActive() {
-        if (this.status != AccountStatus.ACTIVE) {
-            throw new IllegalStateException("[ERROR] Transaction Denied. Account [" + id + "] is currently " + this.status);
+        if (this.status == AccountStatus.FROZEN) {
+            throw new AccountLockedException("[ERROR] Transaction Denied. Account [" + id + "] is currently FROZEN/LOCKED");
         }
+
+        if (this.status == AccountStatus.CLOSED) {
+            throw new AccountLockedException("[ERROR] Transaction Denied. Account [\" + id + \"] is permanently CLOSED.");
+        }
+
+
     }
 
-    private void recordTransaction(String description) {
+    protected void recordTransaction(String description) {
         this.lastTransactionAt = LocalDateTime.now();
         this.transactionHistory.add(description + " on " + this.lastTransactionAt.format(DATE_FORMATTER));
     }
@@ -147,6 +171,7 @@ public abstract class BankAccount implements Serializable {
     // getters
 
     public String getId() { return id; }
+    public String getOwnerId() { return ownerId; }
     public double getBalance() { return balance; }
     public AccountStatus getStatus() { return status; }
     public LocalDateTime getLastTransactionAt() { return lastTransactionAt; }

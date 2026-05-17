@@ -11,10 +11,12 @@ import models.accounts.BankAccount;
 import utils.EncryptionUtils;
 import utils.ValidationUtils;
 
-public abstract class Customer extends Person implements Auditable {
+public class Customer extends Person implements Auditable {
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    // The ID lives here now, where it belongs!
+    private final String id;
     private String password;
     private CustomerStatus status;
     private MembershipTier tier;
@@ -24,13 +26,14 @@ public abstract class Customer extends Person implements Auditable {
 
     private final List<BankAccount> accounts;
 
-    public Customer(String name, int age, String email, int phoneNumber, String password) {
-        super(name, age, email, phoneNumber);
+    public Customer(String id, String name, int age, String email, int phoneNumber, String password) {
+        super(name, age, email, phoneNumber); // Pass only personal fields to Person
 
         if (!ValidationUtils.isValidEmail(email)) {
             throw new IllegalArgumentException("[ERROR] Registration Rejected: Invalid email structural format.");
         }
 
+        this.id = id; // Store the system-generated customer ID locally
         this.password = EncryptionUtils.hashPassword(password);
         this.status = CustomerStatus.ACTIVE;
         this.tier = MembershipTier.REGULAR;
@@ -39,20 +42,18 @@ public abstract class Customer extends Person implements Auditable {
         this.accounts = new ArrayList<>();
     }
 
-    // audits for customers
-
-    @Override
-    public LocalDateTime getCreatedTimestamp() {
-        return this.createdAt;
+    public String getId() {
+        return this.id;
     }
 
+    // Audits for customers
     @Override
-    public LocalDateTime getLastUpdatedTimestamp() {
-        return this.lastLogin;
-    }
+    public LocalDateTime getCreatedTimestamp() { return this.createdAt; }
 
-    // account management methods
+    @Override
+    public LocalDateTime getLastUpdatedTimestamp() { return this.lastLogin; }
 
+    // Account management methods
     public void addAccount(BankAccount account) {
         if (account == null) {
             throw new IllegalArgumentException("[ERROR] Account Assignment Failed: Enter a valid account reference.");
@@ -68,7 +69,7 @@ public abstract class Customer extends Person implements Auditable {
             case CLOSED -> System.out.println("[ERROR] Customer Status Conflict: This profile is already closed.");
             default -> {
                 this.status = CustomerStatus.CLOSED;
-                System.out.println("[STATUS UPDATE] Customer [" + getId() + "] profile has been CLOSED.");
+                System.out.println("[STATUS UPDATE] Customer [" + id + "] profile has been CLOSED.");
 
                 for (BankAccount account : accounts) {
                     account.close();
@@ -83,7 +84,7 @@ public abstract class Customer extends Person implements Auditable {
             case CLOSED -> System.out.println("[ERROR] Customer Status Conflict: Cannot suspend a closed profile."); 
             default -> {
                 this.status = CustomerStatus.SUSPENDED;
-                System.out.println("[STATUS UPDATE] Customer [" + getId() + "] profile has been SUSPENDED.");
+                System.out.println("[STATUS UPDATE] Customer [" + id + "] profile has been SUSPENDED.");
 
                 for (BankAccount account : accounts) {
                     account.freeze();
@@ -98,7 +99,7 @@ public abstract class Customer extends Person implements Auditable {
             case CLOSED -> System.out.println("[ERROR] Customer Status Conflict: Cannot reactivate a closed profile.");
             default -> {
                 this.status = CustomerStatus.ACTIVE;
-                System.out.println("[STATUS UPDATE] Customer [" + getId() + "] profile has been REACTIVATED.");
+                System.out.println("[STATUS UPDATE] Customer [" + id + "] profile has been REACTIVATED.");
 
                 for (BankAccount account : accounts) {
                     account.reactivate();
@@ -107,44 +108,23 @@ public abstract class Customer extends Person implements Auditable {
         }
     }
 
-    public void recordLogin() {
-        this.lastLogin = LocalDateTime.now();
-    }
+    public void recordLogin() { this.lastLogin = LocalDateTime.now(); }
 
-    // getters
-
+    // Getters
     public String getPassword() { return password; }
     public CustomerStatus getStatus() { return status; }
     public MembershipTier getMembershipTier() { return tier; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getLastLogin() { return lastLogin; }
+    public int getTotalAccounts() { return accounts.size(); }
+    public List<BankAccount> getAccounts() { return Collections.unmodifiableList(accounts); }
 
-    public int getTotalAccounts() {
-        return accounts.size();
-    }
+    // Setters
+    public void setPassword(String password) { this.password = password; }
+    public void setStatus(CustomerStatus customerStatus) { this.status = customerStatus; }
+    public void setMembershipTier(MembershipTier tier) { this.tier = tier; }    
 
-    // data protection method (shout out to Gemini for this one)
-
-    public List<BankAccount> getAccounts() {
-        return Collections.unmodifiableList(accounts);
-    }
-
-    // setters
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setStatus(CustomerStatus customerStatus) {
-        this.status = customerStatus;
-    }
-    
-    public void setMembershipTier(MembershipTier tier) {
-        this.tier = tier;
-    }    
-
-    // display info
-
+    // Display info
     @Override
     public void displayInfo() {
         String createdStr = createdAt.format(DATE_FORMATTER);
@@ -153,7 +133,7 @@ public abstract class Customer extends Person implements Auditable {
         System.out.println("=================================================");
         System.out.println("                CUSTOMER AUDIT PROFILE           ");
         System.out.println("=================================================");
-        System.out.printf("  %-22s : %s\n", "Customer ID", getId());
+        System.out.printf("  %-22s : %s\n", "Customer ID", id);
         System.out.printf("  %-22s : %s\n", "Legal Name", getName());
         System.out.printf("  %-22s : %s\n", "Age Profile", getAge());
         System.out.printf("  %-22s : %s\n", "Email Address", getEmail());
@@ -177,4 +157,4 @@ public abstract class Customer extends Person implements Auditable {
             }
         }
     }
-} 
+}

@@ -17,7 +17,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-
     private final String id;
     private final String ownerId;
     private double balance;
@@ -28,7 +27,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
     private final List<String> transactionHistory;
     
     public BankAccount(String ownerId, double startingBalance) {
-        // Generates unique ID using UUID, 1-6 max characters, uppercase
         this.id = "ACC-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         this.ownerId = ownerId;
         this.balance = startingBalance;
@@ -36,8 +34,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         this.createdAt = LocalDateTime.now();
         this.transactionHistory = new ArrayList<>();
     }
-
-    // transaction methods
 
     @Override
     public void deposit(double amount) {
@@ -103,8 +99,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         System.out.println("-------------------------------------------------");        
     }
 
-    // audit methods
-
     @Override
     public LocalDateTime getCreatedTimestamp() {
         return this.createdAt;
@@ -114,8 +108,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
     public LocalDateTime getLastUpdatedTimestamp() {
         return this.lastTransactionAt;
     }
-
-    // account status management methods
 
     public void close() {
         switch (status) {
@@ -149,26 +141,21 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         }
     }
 
-    // helper methods
-
-    private void validateAccountActive() {
+    // Protected so subclasses like CheckingAccount can access validation logic cleanly
+    protected void validateAccountActive() {
         if (this.status == AccountStatus.FROZEN) {
             throw new AccountLockedException("[ERROR] Transaction Denied. Account [" + id + "] is currently FROZEN/LOCKED");
         }
 
         if (this.status == AccountStatus.CLOSED) {
-            throw new AccountLockedException("[ERROR] Transaction Denied. Account [\" + id + \"] is permanently CLOSED.");
+            throw new AccountLockedException("[ERROR] Transaction Denied. Account [" + id + "] is permanently CLOSED.");
         }
-
-
     }
 
     protected void recordTransaction(String description) {
         this.lastTransactionAt = LocalDateTime.now();
         this.transactionHistory.add(description + " on " + this.lastTransactionAt.format(DATE_FORMATTER));
     }
-
-    // getters
 
     public String getId() { return id; }
     public String getOwnerId() { return ownerId; }
@@ -182,8 +169,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         return Collections.unmodifiableList(transactionHistory);
     }
 
-    //setters  
-
     public void setBalance(double balance) { 
         this.balance = balance; 
     }
@@ -192,7 +177,6 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         this.status = status;
     }
 
-    // display info 
     public void displayInfo() {
         String createdStr = createdAt.format(DATE_FORMATTER);
         String lastTxStr = (lastTransactionAt != null) ? lastTransactionAt.format(DATE_FORMATTER) : "No transaction activity recorded";

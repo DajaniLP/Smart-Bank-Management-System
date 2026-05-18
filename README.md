@@ -1,5 +1,4 @@
 (In-progress, not finished. V0.9)
-(Also, I just posted all my source code to gemini and told it to generate a README file so excuse any mistakes :/ )
 
 # Smart Bank Management System
 

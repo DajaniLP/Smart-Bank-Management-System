@@ -1,4 +1,4 @@
-(In-progress, not finished. V0.9)
+(Finished! V1)
 
 # Smart Bank Management System
 

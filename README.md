@@ -74,6 +74,40 @@ The application code is separated into dedicated domain packages to minimize cla
 * **[FIXED]** Fixed a critical authentication bypass/lockout bug in `LoginSystem` where raw plain text console parameters were compared directly to saved cipher text hashes instead of running input encryption comparisons first.
 * **[FEATURE]** Implemented missing master lookup engines in the Compliance Administrative Terminal, allowing system managers to list all registered customers, dynamically modify client membership tiers, and change accounting classifications.
 
+### EncryptionUtils.java
+- Replaced insecure string-reversal password "hashing" with proper SHA-256 via MessageDigest
+- Replaced string concatenation in loop with StringBuilder for hex encoding
+
+### Customer.java
+- Added separate `lastUpdatedAt` field; `getLastUpdatedTimestamp()` was incorrectly returning `lastLogin`
+- `suspend()` now cascades and freezes all linked accounts
+- `reactivate()` now cascades and unfreezes all linked accounts
+- `lastUpdatedAt` is updated on suspend, reactivate, setMembershipTier, and recordLogin
+
+### CreditAccount.java
+- Added missing `withdraw()` override; credit limit was never enforced
+- Charging now correctly increases the balance (debt) and checks against available credit
+
+### SavingsAccount.java
+- Added missing `withdraw()` override; withdrawals were completely unchecked
+- Withdrawals now throw InsufficientFundsException if amount exceeds current balance
+
+### TransactionManager.java
+- Added customer ownership check to `executeWithdrawal()`
+- Added membership tier limit enforcement for withdrawals and transfers
+- `executeTransfer()` now takes customerId parameter for security validation
+
+### MenuSystem.java
+- Fixed withdrawal call from `TransactionAction.executeWithdrawal()` (invalid static interface call) to `transactionManager.executeWithdrawal()`
+- `processMonthlyInterestBatch()` now skips frozen and closed savings accounts to prevent mid-batch exceptions
+- Added TransactionManager dependency injection via constructor
+- Refactored teller workstation from if-else chain to switch expressions for consistency
+- Added option 3 to teller workstation: view all customers and their linked accounts with balance and status
+- Fixed `orElseThrow()` calls to include meaningful error messages
+- Deposits now persist via `accountRepo.save()` consistent with withdrawal path
+- Added transfer option to customer session loop, exposing already-built transfer functionality
+- Fixed capitalization inconsistency in menu option labels
+
 ---
 
 ## Build, Run, and Access

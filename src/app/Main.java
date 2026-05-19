@@ -1,6 +1,8 @@
 package app;
 
 import managers.AccountManager;
+import managers.CustomerManager;
+import managers.TransactionManager;
 import repositories.BankAccountRepository;
 import repositories.CustomerRepository;
 import systems.LoginSystem;
@@ -13,23 +15,23 @@ public class Main {
         System.out.println("=================================================");
 
         try {
-            // 1. Initialize Persistence Repositories (e.g., File-based or Memory-based)
-            // Ensure these implement CustomerRepository / BankAccountRepository respectively
+            // 1. Initialize Persistence Repositories
             CustomerRepository customerRepo = new CustomerRepository();
             BankAccountRepository accountRepo = new BankAccountRepository();
-
             System.out.println("[CORE] Persistence systems booted successfully.");
 
-            // 2. Initialize Core Management Component
+            // 2. Initialize Core Management Component Layers
             AccountManager accountManager = new AccountManager(accountRepo, customerRepo);
-            System.out.println("[CORE] Operational Business Manager initialized.");
+            CustomerManager customerManager = new CustomerManager(customerRepo);
+            TransactionManager transactionManager = new TransactionManager(accountRepo, customerRepo);
+            System.out.println("[CORE] Operational Business, Customer, and Transaction Managers initialized.");
 
             // 3. Initialize Security & Authentication Gateway
             LoginSystem loginSystem = new LoginSystem(customerRepo);
             System.out.println("[CORE] Security Gateways and RBAC logs linked.");
 
-            // 4. Instantiate the Consolidated Menu Core Engine
-            MenuSystem menuSystem = new MenuSystem(loginSystem, accountManager, customerRepo, accountRepo);
+            // 4. Instantiate the Consolidated Menu Core Engine with full dependency injection
+            MenuSystem menuSystem = new MenuSystem(loginSystem, accountManager, transactionManager, customerRepo, accountRepo);            
             System.out.println("[CORE] UI Control Console attached.");
             System.out.println("=================================================\n");
 

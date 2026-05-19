@@ -1,17 +1,31 @@
 package utils;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class EncryptionUtils {
 
     public static String hashPassword(String password) {
         if (password == null) {
             return null;
         }
-        
-        String reversed = "";
-        for (int i = password.length() - 1; i >= 0; i--) {
-            reversed += password.charAt(i);
+
+        // FIX: use SHA-256 instead of string reversal
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(password.getBytes());
+
+            // FIX: use StringBuilder instead of string concatenation in a loop
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("[ERROR] Password hashing engine unavailable.", e);
         }
-        
-        return "SECURE_" + reversed;
     }
 }

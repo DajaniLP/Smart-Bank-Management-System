@@ -6,6 +6,7 @@ import exceptions.CustomerNotFoundException;
 import java.io.Serializable;
 import models.people.Customer;
 import repositories.CustomerRepository;
+import utils.EncryptionUtils;
 
 public class LoginSystem implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -16,13 +17,10 @@ public class LoginSystem implements Serializable {
         this.customerRepo = customerRepo;
     }
 
-    // Authenticate a customer profile against their password credentials
     public boolean authenticate(String customerId, String password) throws AccountLockedException {
-        // Replaced unsafe conditional tracking with your Custom Exceptions
         Customer customer = customerRepo.findById(customerId)
             .orElseThrow(() -> new CustomerNotFoundException("[ERROR] Authentication failed. Customer profile not found."));
 
-        // Enforce administrative suspensions immediately
         if (customer.getStatus() == CustomerStatus.SUSPENDED) {
             throw new AccountLockedException("[ACCESS DENIED] Profile " + customerId + " is structurally locked or suspended.");
         }
@@ -32,8 +30,9 @@ public class LoginSystem implements Serializable {
             return false;
         }
 
-        // Validate password match
-        if (customer.getPassword().equals(password)) {
+        // FIXED: Input string must hash identically to match the saved record
+        String hashedInput = EncryptionUtils.hashPassword(password);
+        if (customer.getPassword().equals(hashedInput)) {
             customer.recordLogin();
             customerRepo.save(customer);
             System.out.println("[SUCCESS] Gateway clearance granted for " + customer.getName());

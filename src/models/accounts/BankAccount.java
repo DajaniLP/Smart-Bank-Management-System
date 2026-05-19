@@ -25,7 +25,8 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
     private final LocalDateTime createdAt;
     private LocalDateTime lastTransactionAt;
     private final List<String> transactionHistory;
-    
+    private OwnershipType ownershipType = OwnershipType.PERSONAL;
+
     public BankAccount(String ownerId, double startingBalance) {
         this.id = "ACC-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         this.ownerId = ownerId;
@@ -35,146 +36,74 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         this.transactionHistory = new ArrayList<>();
     }
 
-    @Override
-    public void deposit(double amount) {
-        validateAccountActive();
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Deposit amount must be positive.");
-        }
-
-        this.balance += amount;
-        recordTransaction("Deposited: $" + String.format("%.2f", amount));
-
-        System.out.println("-------------------------------------------------");
-        System.out.println("» DEPOSIT SUCCESSFUL");
-        System.out.println("  Amount Added: +$" + String.format("%.2f", amount));
-        System.out.println("  New Balance:   $" + String.format("%.2f", balance));
-        System.out.println("-------------------------------------------------");        
-    }
-
-    @Override
-    public void withdraw(double amount) {
-        validateAccountActive();
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Withdrawal amount must be positive.");
-        }
-        if (amount > this.balance) {
-            throw new InsufficientFundsException("Insufficient funds. Current balance: $" + String.format("%.2f", this.balance));
-        }
-        
-        this.balance -= amount;
-        recordTransaction("Withdrew: $" + String.format("%.2f", amount));
-        
-        System.out.println("-------------------------------------------------");
-        System.out.println("» WITHDRAWAL SUCCESSFUL");
-        System.out.println("  Amount Deducted: -$" + String.format("%.2f", amount));
-        System.out.println("  New Balance:     $" + String.format("%.2f", balance));
-        System.out.println("-------------------------------------------------");
-    }
-
-    @Override
-    public void transfer(double amount, BankAccount targetAccount) {
-        validateAccountActive();
-        if (amount <= 0) {
-            throw new IllegalArgumentException("[ERROR] Transfer amount must be positive.");
-        }
-        
-        if (amount > this.balance) {
-            throw new InsufficientFundsException("[ERROR] Insufficient funds. Current balance: $" 
-            + String.format("%.2f", this.balance));
-        }
-
-        this.balance -= amount;
-        targetAccount.setBalance(targetAccount.getBalance() + amount);
-        this.lastTransactionAt = LocalDateTime.now();
-
-        this.transactionHistory.add("Transferred $" + String.format("%.2f", amount) 
-        + " to [" + targetAccount.getId() + "] at " + lastTransactionAt.format(DATE_FORMATTER));
-
-        System.out.println("-------------------------------------------------");
-        System.out.println("» TRANSFER SUCCESSFUL");
-        System.out.println("  Amount Sent: -$" + String.format("%.2f", amount));
-        System.out.println("  Recipient:    " + targetAccount.getId());
-        System.out.println("  New Balance:  $" + String.format("%.2f", balance));
-        System.out.println("-------------------------------------------------");        
-    }
-
-    @Override
-    public LocalDateTime getCreatedTimestamp() {
-        return this.createdAt;
-    }
-
-    @Override
-    public LocalDateTime getLastUpdatedTimestamp() {
-        return this.lastTransactionAt;
-    }
-
-    public void close() {
-        switch (status) {
-            case CLOSED -> System.out.println("[ERROR] Account Status Conflict: This account is already closed.");
-            default -> {
-                this.status = AccountStatus.CLOSED;
-                System.out.println("[STATUS UPDATE] Account [" + id + "] has been successfully CLOSED.");
-            }
-        }
-    }
-
-    public void freeze() {
-        switch (status) {
-            case FROZEN -> System.out.println("[ERROR] Account Status Conflict: This account is already frozen.");
-            case CLOSED -> System.out.println("[ERROR] Account Status Conflict: Cannot freeze a closed account.");
-            default -> {
-                this.status = AccountStatus.FROZEN;
-                System.out.println("[STATUS UPDATE] Account [" + id + "] has been successfully FROZEN.");
-            }
-        }
-    }
-
-    public void reactivate() {
-        switch (status) {
-            case ACTIVE -> System.out.println("[ERROR] Account Status Conflict: This account is already active.");
-            case CLOSED -> System.out.println("[ERROR] Account Status Conflict: Cannot reactivate a closed account.");
-            default -> {
-                this.status = AccountStatus.ACTIVE;
-                System.out.println("[STATUS UPDATE] Account [" + id + "] has been successfully REACTIVATED.");
-            }    
-        }
-    }
-
-    // Protected so subclasses like CheckingAccount can access validation logic cleanly
-    protected void validateAccountActive() {
-        if (this.status == AccountStatus.FROZEN) {
-            throw new AccountLockedException("[ERROR] Transaction Denied. Account [" + id + "] is currently FROZEN/LOCKED");
-        }
-
-        if (this.status == AccountStatus.CLOSED) {
-            throw new AccountLockedException("[ERROR] Transaction Denied. Account [" + id + "] is permanently CLOSED.");
-        }
-    }
-
-    protected void recordTransaction(String description) {
-        this.lastTransactionAt = LocalDateTime.now();
-        this.transactionHistory.add(description + " on " + this.lastTransactionAt.format(DATE_FORMATTER));
-    }
-
     public String getId() { return id; }
     public String getOwnerId() { return ownerId; }
     public double getBalance() { return balance; }
     public AccountStatus getStatus() { return status; }
-    public LocalDateTime getLastTransactionAt() { return lastTransactionAt; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public OwnershipType getOwnershipType() { return ownershipType; }
     public abstract AccountType getType();
+
+    protected void setBalance(double balance) { this.balance = balance; }
+    public void setStatus(AccountStatus status) { this.status = status; }
+    public void setOwnershipType(OwnershipType ownershipType) { this.ownershipType = ownershipType; }
+
+    public void close() { this.status = AccountStatus.CLOSED; }
+    public void freeze() { this.status = AccountStatus.FROZEN; }
+    public void reactivate() { this.status = AccountStatus.ACTIVE; }
+
+    @Override
+    public LocalDateTime getCreatedTimestamp() { return createdAt; }
+    @Override
+    public LocalDateTime getLastUpdatedTimestamp() { return lastTransactionAt; }
 
     public List<String> getTransactionHistory() {
         return Collections.unmodifiableList(transactionHistory);
     }
 
-    public void setBalance(double balance) { 
-        this.balance = balance; 
+    protected void recordTransaction(String executionDetails) {
+        this.lastTransactionAt = LocalDateTime.now();
+        this.transactionHistory.add("[" + lastTransactionAt.format(DATE_FORMATTER) + "] " + executionDetails);
     }
 
-    public void setStatus(AccountStatus status) {
-        this.status = status;
+    protected void validateAccountActive() {
+        if (this.status == AccountStatus.LOCKED || this.status == AccountStatus.FROZEN) {
+            throw new AccountLockedException("[ACCESS DENIED] Account " + id + " is locked or frozen.");
+        }
+        if (this.status == AccountStatus.CLOSED) {
+            throw new IllegalStateException("[ERROR] Operations prohibited on closed account asset.");
+        }
+    }
+
+    // Shared Default Polymorphic Implementations
+    @Override
+    public void deposit(double amount) {
+        validateAccountActive();
+        if (amount <= 0) throw new IllegalArgumentException("Deposit amount must be positive.");
+        this.balance += amount;
+        recordTransaction("Deposited funds: +" + String.format("$%.2f", amount));
+    }
+
+    @Override
+    public void withdraw(double amount) {
+        validateAccountActive();
+        if (amount <= 0) throw new IllegalArgumentException("Withdrawal amount must be positive.");
+        if (amount > this.balance) throw new InsufficientFundsException("[ERROR] Insufficient standard account funds.");
+        this.balance -= amount;
+        recordTransaction("Withdrew funds: -" + String.format("$%.2f", amount));
+    }
+
+    @Override
+    public void transfer(double amount, BankAccount targetAccount) {
+        if (targetAccount == null) throw new IllegalArgumentException("Target account cannot be null.");
+        this.withdraw(amount);
+        targetAccount.deposit(amount);
+        this.recordTransaction("Transferred " + String.format("$%.2f", amount) + " to account: " + targetAccount.getId());
+        targetAccount.recordTransaction("Received " + String.format("$%.2f", amount) + " from account: " + this.id);
+    }
+
+    // Polymorphic lifecycle hook for batch operations
+    public void applyEndOfMonthInterest() {
+        // Default: No-op for accounts that don't accrue interest
     }
 
     public void displayInfo() {
@@ -187,10 +116,10 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
         System.out.printf("  %-22s : %s\n", "Account ID", id);
         System.out.printf("  %-22s : %s\n", "Account Type", getType());        
         System.out.printf("  %-22s : %s\n", "Account Status", status);
+        System.out.printf("  %-22s : %s\n", "Ownership Classification", ownershipType);
         System.out.printf("  %-22s : $%s\n", "Current Balance", String.format("%.2f", balance));
         System.out.printf("  %-22s : %s\n", "Created Timestamp", createdStr);
-        System.out.printf("  %-22s : %s\n", "Last Active Timestamp", lastTxStr);
+        System.out.printf("  %-22s : %s\n", "Last Active Transaction", lastTxStr);
         System.out.println("=================================================");
-        System.out.println("");
     }
 }

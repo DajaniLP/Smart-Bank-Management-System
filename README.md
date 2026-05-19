@@ -1,4 +1,4 @@
-# Smart Bank Management System (V1.0.0 - Production Stabilized)
+# Smart Bank Management System (V1.1.0 - Production Stabilized)
 
 The Smart Bank Management System is a production-grade, terminal-based enterprise console application written in Java. The platform relies on a clean layered design and core object-oriented programming (OOP) principles to govern secure multi-user portal entries, perform transactional constraint validations across structural financial asset tiers, and preserve entity states across reboots using persistent binary object stream serialization.
 

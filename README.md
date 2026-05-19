@@ -1,8 +1,6 @@
-(In-progress, not finished. V0.9)
+# Smart Bank Management System (V1.0.0 - Production Stabilized)
 
-# Smart Bank Management System
-
-The Smart Bank Management System is a production-grade, terminal-based enterprise console application written in Java. The platform relies on a clean layered design and core object-oriented principles to govern secure multi-user portal entries, perform transactional constraint validations across structural financial asset tiers, and preserve entity states across reboots using persistent binary object stream serialization.
+The Smart Bank Management System is a production-grade, terminal-based enterprise console application written in Java. The platform relies on a clean layered design and core object-oriented programming (OOP) principles to govern secure multi-user portal entries, perform transactional constraint validations across structural financial asset tiers, and preserve entity states across reboots using persistent binary object stream serialization.
 
 ---
 
@@ -17,7 +15,7 @@ The application code is separated into dedicated domain packages to minimize cla
   * `AccountStatus.java`: Tracks administrative flags for financial resources (`ACTIVE`, `LOCKED`, `FROZEN`, `CLOSED`).
   * `AccountType.java`: Groups specialized accounting options (`CHECKING`, `SAVINGS`, `CREDIT`, `LOAN`).
   * `CustomerStatus.java`: Flags profile usage rights (`ACTIVE`, `SUSPENDED`, `CLOSED`).
-  * `MembershipTier.java`: Holds account validation parameters matching clients to daily financial activity rules (`REGULAR`, `PREMIUM`, `VIP`).
+  * `MembershipTier.java`: Holds account validation parameters matching clients to transactional activity rules (`REGULAR`, `PREMIUM`, `VIP`).
   * `OwnershipType.java`: Models profile category rules (`PERSONAL`, `BUSINESS`).
 
 * **`exceptions` (Domain Exception Tree)**
@@ -33,61 +31,48 @@ The application code is separated into dedicated domain packages to minimize cla
 
 * **`managers` (Business Calculation Engines)**
   * `CustomerManager.java`: Coordinates client profile updates and propagates cascading administrative suspensions.
-  * `AccountManager.java`: Verifies configuration constraints when establishing checking, savings, loan, or credit portfolios.
+  * `AccountManager.java`: Verifies configuration constraints when establishing portfolios, and acts as the relational bridge mapping synchronized cross-entity list caches.
   * `TransactionManager.java`: Handles cross-account balance adjustments, processing funds movements while logging ledger activity.
 
 * **`models` (Structural Entities)**
-  * `models/people/Person.java`: Abstract root class housing core client profiles, demographic strings, and physical identification metrics.
-  * `models/people/Customer.java`: Specialized class extending `Person` that tracks profile metadata, security fields, and links to personal portfolios.
-  * `models/accounts/BankAccount.java`: Abstract base entity tracking unique routing keys, status flags, timestamps, and history streams.
+  * `models/people/Person.java`: Abstract root class housing core client profiles, demographic strings, and contact fields.
+  * `models/people/Customer.java`: Specialized class extending `Person` that tracks profile metadata, security fields, and holds encapsulated references to its matching asset portfolios.
+  * `models/accounts/BankAccount.java`: Abstract base entity tracking unique routing keys, status flags, ownership tags, timestamps, and history streams.
   * `models/accounts/CheckingAccount.java`: Implements structural adjustments utilizing custom overdraft protection limits.
   * `models/accounts/SavingsAccount.java`: Computes periodic yield adjustments based on interest rates.
   * `models/accounts/CreditAccount.java`: Tracks outstanding credit usage against a fixed debt limit.
-  * `models/accounts/LoanAccount.java`: Collects static liabilities and locks customer access to prevent direct manual withdrawals.
+  * `models/accounts/LoanAccount.java`: Collects static liabilities and passes parent configurations cleanly through a corrected base matching constructor.
 
 * **`repositories` (Data Persistence Layer)**
   * `CustomerRepository.java`: Interacts directly with `customers.dat` via object stream serialization. Features self-healing capabilities to reconstruct corrupt file headers.
   * `BankAccountRepository.java`: Interacts directly with `accounts.dat` via object stream serialization to load and persist financial asset states.
 
 * **`systems` (Console Routing Subsystems)**
-  * `LoginSystem.java`: Manages authentication loops, tests passwords against user security records, and blocks locked profiles.
-  * `MenuFormatter.java`: Provides terminal layout utilities, including aligned display boxes and console progress metrics.
-  * `MenuSystem.java`: Controls application routing, providing isolated submenus for customers, tellers, and administrative tasks.
+  * `LoginSystem.java`: Manages authentication loops, evaluating cryptographic matching operations securely by translating incoming keyboard plain text against salted record hashes.
+  * `MenuFormatter.java`: Provides terminal layout utilities, including aligned display boxes, tabular layout tools, and console progress metrics.
+  * `MenuSystem.java`: Controls application routing, providing isolated submenus for customers, tellers, and administrative operations.
 
 * **`utils` (System Support Helpers)**
-  * `EncryptionUtils.java`: Implements lightweight string adjustments to protect stored credentials.
-  * `ValidationUtils.java`: Evaluates user inputs against specific layout rules, including standard email string validation.
+  * `EncryptionUtils.java`: Implements string mutations to protect stored credentials by calculating custom, reversible security hashes.
+  * `ValidationUtils.java`: Evaluates user inputs against specific layout rules, including standard email string verification.
 
 ---
 
 ## Technical Highlights & OOP Strategy
 
-1. **Polymorphic Invariants**: Common actions rely on shared interface signatures (`TransactionAction`). Subclasses override these methods to enforce specific behaviors, such as evaluating overdraft buffers on checking accounts or preventing manual withdrawals on loans.
-2. **Decoupled Data Architecture**: Business logic interact with storage abstractions strictly through the generic `CrudRepository<T, ID>` interface. This decouples service layers from physical file operations.
-3. **Automated State Storage**: System states are serialized directly to disk as binary object data (`.dat`). File repositories handle stream reading, data synchronization, and error collection during startup routines.
-4. **Declarative Error Management**: Replaces nested conditional tracking blocks with specialized runtime exceptions, allowing the system to catch and handle logic errors at explicit transaction boundaries.
+1. **Polymorphic Invariants**: Common actions rely on shared interface signatures (`TransactionAction`). Subclasses override these methods to enforce specific behaviors, such as evaluating overdraft buffers on checking accounts or throwing unsupported operation exceptions to explicitly block direct withdrawals on loan accounts.
+2. **Synchronized Cross-Entity Object Caching**: Solves data graph desynchronization issues common to dual-file binary architectures. When standalone `BankAccount` streams alter records, an internal relational mapping engine inside `AccountManager` bridges the `Customer` portfolio list automatically, clearing out stale caches before every profile menu load.
+3. **Decoupled Data Architecture**: Business logic interacts with storage abstractions strictly through the generic `CrudRepository<T, ID>` interface, completely separating service layers from physical file Input/Output operations.
+4. **Active Business Rule Enforcement**: Fully couples operational enums to live transaction streams. The application actively tracks `MembershipTier` limits ($5,000 to $50,000 metrics) during cash withdrawals, and supports runtime conversions of `OwnershipType` (`PERSONAL` vs. `BUSINESS`) at the administrative terminal layout level.
+5. **Declarative Error Management**: Replaces nested conditional tracking blocks with specialized runtime exceptions (`AccountLockedException`, `InsufficientFundsException`), allowing the system to safely interrupt execution and catch errors at clear transaction boundaries.
 
 ---
 
-## Project Backlog & Planned Implementation
+## Version Changelog (Recent Patches)
 
-The following structural components and logic extensions are scheduled for integration during upcoming updates:
-
-1. **LoanAccount Constructor Routing Revision**
-   * *Status*: Missing / Broken Dependency.
-   * *Action*: Update the initialization paths within `LoanAccount.java`. The constructor must be updated to pass both the customer assignment strings and the starting principal debt balance directly to the abstract `BankAccount` base class (`super(ownerId, startingBalance)`), fixing compilation conflicts with parent models.
-
-2. **Transaction-Level Membership Limit Enforcement**
-   * *Status*: Incomplete Domain Logic.
-   * *Action*: Update the transaction tracking code inside the service managers to reference configuration traits stored within the `MembershipTier` options (`REGULAR`, `PREMIUM`, `VIP`). Validations must cross-check withdrawal and transfer requests against daily limits to ensure compliance.
-
-3. **Global Analytics & Descriptive Statistical Search**
-   * *Status*: Missing Analytics Module.
-   * *Action*: Implement an aggregation utility inside the repository layers. The engine must compile structural business metrics, including total system liquidity, average client balance profiles, total asset allocations, outstanding debt counts, and match specific target string records across file databases.
-
-4. **Console Interaction Optimization**
-   * *Status*: UI Refinement.
-   * *Action*: Simplify navigation pathways within the main loops. This includes removing redundant menu choices, streamlining data entry steps, and applying input filters to prevent terminal routing crashes.
+* **[FIXED]** Corrected `LoanAccount` constructor mapping error by fixing the internal `super()` parameters to supply the required elements (`ownerId`, `startingBalance`) down to the parent abstract class.
+* **[FIXED]** Fixed a critical authentication bypass/lockout bug in `LoginSystem` where raw plain text console parameters were compared directly to saved cipher text hashes instead of running input encryption comparisons first.
+* **[FEATURE]** Implemented missing master lookup engines in the Compliance Administrative Terminal, allowing system managers to list all registered customers, dynamically modify client membership tiers, and change accounting classifications.
 
 ---
 
@@ -96,4 +81,4 @@ The following structural components and logic extensions are scheduled for integ
 ### Compilation
 Compile the absolute system package from your terminal workspace root folder:
 ```bash
-javac app/Main.java -d out
+javac app/Main.java -d

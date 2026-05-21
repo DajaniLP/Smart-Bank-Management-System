@@ -20,7 +20,7 @@ public class MenuSystem {
     private final BankAccountRepository accountRepo;
     private final TransactionManager transactionManager;
     
-    private static final String ADMIN_PASSCODE = "Admin123";
+    private static final String ADMIN_PASSCODE = "admin123";
 
     public MenuSystem(LoginSystem loginSystem, AccountManager accountManager,
                 TransactionManager transactionManager,

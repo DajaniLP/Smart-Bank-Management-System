@@ -33,9 +33,8 @@ public class Customer extends Person implements Auditable {
         this.createdAt = LocalDateTime.now();
     }
 
-    @Override
+
     public String getId() { return id; }
-    
     public String getPassword() { return password; }
     public CustomerStatus getStatus() { return status; }
     public MembershipTier getMembershipTier() { return tier; }

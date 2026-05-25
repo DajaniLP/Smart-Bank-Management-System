@@ -10,12 +10,10 @@ public class EncryptionUtils {
             return null;
         }
 
-        // FIX: use SHA-256 instead of string reversal
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = digest.digest(password.getBytes());
 
-            // FIX: use StringBuilder instead of string concatenation in a loop
             StringBuilder hexString = new StringBuilder();
             for (byte b : hashBytes) {
                 String hex = Integer.toHexString(0xff & b);

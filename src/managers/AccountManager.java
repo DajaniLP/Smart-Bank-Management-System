@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import models.accounts.*;
+import models.accounts.BankAccount;
+import models.accounts.personal.*;
 import models.people.Customer;
 
 public class AccountManager implements Serializable {
@@ -37,9 +38,7 @@ public class AccountManager implements Serializable {
             .orElseThrow(() -> new CustomerNotFoundException("[ERROR] Profile reference missing for: " + customerId));
         
         CheckingAccount account = new CheckingAccount(customerId, startingBalance, overdraftLimit);
-        accountRepo.save(account);
-        
-        // Save customer changes securely without trapping stale account states
+        accountRepo.save(account);    
         customerRepo.save(customer);
     }
 
@@ -73,10 +72,6 @@ public class AccountManager implements Serializable {
         customerRepo.save(customer);
     }
 
-    /**
-     * Dynamically queries data models directly from repo storage.
-     * Prevents data sync errors across files.
-     */
     public List<BankAccount> getAllAccountsForCustomer(String customerId) {
         List<BankAccount> matched = new ArrayList<>();
         for (BankAccount acc : accountRepo.findAll()) {

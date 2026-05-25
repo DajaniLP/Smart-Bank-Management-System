@@ -7,7 +7,7 @@ import java.util.Scanner;
 import managers.AccountManager;
 import managers.TransactionManager;
 import models.accounts.BankAccount;
-import models.accounts.SavingsAccount;
+import models.accounts.personal.SavingsAccount;
 import models.people.Customer;
 import repositories.BankAccountRepository;
 import repositories.CustomerRepository;
@@ -245,14 +245,14 @@ public class MenuSystem {
 
                     default -> System.out.println("[ERROR] Invalid option.");
                 }
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 System.out.println("[WORKSTATION EXCEPTION] Prohibited manipulation trace: " + e.getMessage());
             }
         }
     }
 
     private void handleAdminTerminal() {
-        System.out.print("Enter Admin Master Security Password: ");
+        System.out.print("Enter Admin Security Password: ");
         String code = scanner.nextLine();
         if (!code.equals(ADMIN_PASSCODE)) {
             System.out.println("[CRITICAL] Access Denied. Audit tracking log recorded.");

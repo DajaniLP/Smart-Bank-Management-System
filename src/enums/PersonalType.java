@@ -1,5 +1,5 @@
 package enums;
 
-public enum AccountType {
+public enum PersonalType {
     CHECKING, SAVINGS, CREDIT, LOAN;
 }

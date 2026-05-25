@@ -41,7 +41,7 @@ public abstract class BankAccount implements Serializable, Auditable, Transactio
     public double getBalance() { return balance; }
     public AccountStatus getStatus() { return status; }
     public OwnershipType getOwnershipType() { return ownershipType; }
-    public abstract AccountType getType();
+    public abstract PersonalType getType();
 
     protected void setBalance(double balance) { this.balance = balance; }
     public void setStatus(AccountStatus status) { this.status = status; }

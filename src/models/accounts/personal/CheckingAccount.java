@@ -1,7 +1,8 @@
-package models.accounts;
+package models.accounts.personal;
 
-import enums.AccountType;
+import enums.PersonalType;
 import exceptions.InsufficientFundsException;
+import models.accounts.BankAccount;
 
 public class CheckingAccount extends BankAccount {
     private static final long serialVersionUID = 1L;
@@ -14,8 +15,8 @@ public class CheckingAccount extends BankAccount {
     }
 
     @Override
-    public AccountType getType() {
-        return AccountType.CHECKING;
+    public PersonalType getType() {
+        return PersonalType.CHECKING;
     }
     
     public double getOverdraftLimit() {

@@ -1,6 +1,7 @@
-package models.accounts;
+package models.accounts.personal;
 
-import enums.AccountType;
+import models.accounts.BankAccount;
+import enums.PersonalType;
 import exceptions.InsufficientFundsException;
 
 public class CreditAccount extends BankAccount {
@@ -14,8 +15,8 @@ public class CreditAccount extends BankAccount {
     }
 
     @Override
-    public AccountType getType() {
-        return AccountType.CREDIT;
+    public PersonalType getType() {
+        return PersonalType.CREDIT;
     }
 
     public double getCreditLimit() {

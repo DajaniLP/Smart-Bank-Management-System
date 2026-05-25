@@ -1,11 +1,12 @@
-package models.accounts;
+package models.accounts.personal;
 
-import enums.AccountType;
+import enums.PersonalType;
+import models.accounts.BankAccount;
 
 public class SavingsAccount extends BankAccount {
     private static final long serialVersionUID = 1L;
 
-    private double interestRate; // e.g., 0.04 for 4%
+    private double interestRate; 
 
     public SavingsAccount(String ownerId, double startingBalance, double interestRate) {
         super(ownerId, startingBalance);
@@ -13,8 +14,8 @@ public class SavingsAccount extends BankAccount {
     }
 
     @Override 
-    public AccountType getType() {
-        return AccountType.SAVINGS;
+    public PersonalType getType() {
+        return PersonalType.SAVINGS;
     }
 
     public double getInterestRate() {

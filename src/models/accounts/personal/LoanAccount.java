@@ -1,6 +1,7 @@
-package models.accounts;
+package models.accounts.personal;
 
-import enums.AccountType;
+import enums.PersonalType;
+import models.accounts.BankAccount;
 
 public class LoanAccount extends BankAccount {
     private static final long serialVersionUID = 1L;
@@ -15,8 +16,8 @@ public class LoanAccount extends BankAccount {
     }
 
     @Override
-    public AccountType getType() {
-        return AccountType.LOAN;
+    public PersonalType getType() {
+        return PersonalType.LOAN;
     }
 
     public double getInitialPrincipal() {

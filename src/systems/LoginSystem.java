@@ -30,7 +30,6 @@ public class LoginSystem implements Serializable {
             return false;
         }
 
-        // FIXED: Input string must hash identically to match the saved record
         String hashedInput = EncryptionUtils.hashPassword(password);
         if (customer.getPassword().equals(hashedInput)) {
             customer.recordLogin();
